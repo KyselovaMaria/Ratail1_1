@@ -11,10 +11,17 @@ document.addEventListener("DOMContentLoaded", function() {
             } else if (sectionId === "products") {
                 removePreviousTable();
                 fetchWarehouseDataFromAPI();
+            } else if (sectionId === "customers") {
+                removePreviousTable();
+                fetchCustomersDataFromAPI();
+            } else if (sectionId === "product") {
+                removePreviousTable();
+                fetchProductsDataFromAPI();
             }
         });
     });
 });
+
 
 function removePreviousTable() {
     const body = document.body;
@@ -47,6 +54,18 @@ function fetchWarehouseDataFromAPI() {
 
 function fetchProductsDataFromAPI(warehouseId) {
     fetch(`https://retail-n3ew.onrender.com/warehouse/${warehouseId}`)
+        .then(response => response.json())
+        .then(data => displayProductsTable(data))
+        .catch(error => console.error("Error fetching products data: ", error));
+}
+function fetchCustomersDataFromAPI() {
+    fetch("https://retail-n3ew.onrender.com/customer")
+        .then(response => response.json())
+        .then(data => displayCustomersTable(data))
+        .catch(error => console.error("Error fetching customers data: ", error));
+}
+function fetchProductsDataFromAPI() {
+    fetch("https://retail-n3ew.onrender.com/product")
         .then(response => response.json())
         .then(data => displayProductsTable(data))
         .catch(error => console.error("Error fetching products data: ", error));
@@ -553,4 +572,69 @@ function saveData() {
     fetchOrdersDataFromAPI();
 }
 
+function displayCustomersTable(customers) {
+    const tableContainer = document.createElement("div");
+    tableContainer.classList.add("orders-table-container");
 
+    const table = document.createElement("table");
+    table.classList.add("orders-table");
+    const headerRow = table.insertRow();
+    const headers = ["Last Name", "First Name", "Phone", "Email", "Shipping Address"];
+
+    headers.forEach(headerText => {
+        const headerCell = document.createElement("th");
+        headerCell.textContent = headerText;
+        headerRow.appendChild(headerCell);
+    });
+
+    customers.forEach(customer => {
+        const row = table.insertRow();
+        const lastName = customer.lastName || "N/A";
+        const firstName = customer.firstName || "N/A";
+        const phone = customer.phone || "N/A";
+        const email = customer.email || "N/A";
+        const shippingAddress = customer.shippingAdress || "N/A";
+
+        const rowData = [lastName, firstName, phone, email, shippingAddress];
+
+        rowData.forEach(value => {
+            const cell = row.insertCell();
+            cell.textContent = value;
+        });
+    });
+
+    tableContainer.appendChild(table);
+    document.body.appendChild(tableContainer);
+}
+function displayProductsTable(products) {
+    const tableContainer = document.createElement("div");
+    tableContainer.classList.add("orders-table-container");
+
+    const table = document.createElement("table");
+    table.classList.add("orders-table");
+    const headerRow = table.insertRow();
+    const headers = ["Name", "Price", "Minimum Stock"];
+
+    headers.forEach(headerText => {
+        const headerCell = document.createElement("th");
+        headerCell.textContent = headerText;
+        headerRow.appendChild(headerCell);
+    });
+
+    products.forEach(product => {
+        const row = table.insertRow();
+        const name = product.name || "N/A";
+        const price = product.price || "N/A";
+        const minimumStock = product.minimumStock || "N/A";
+
+        const rowData = [name, price, minimumStock];
+
+        rowData.forEach(value => {
+            const cell = row.insertCell();
+            cell.textContent = value;
+        });
+    });
+
+    tableContainer.appendChild(table);
+    document.body.appendChild(tableContainer);
+}
