@@ -451,15 +451,76 @@ function addNewRow() {
 
     // Создаем ячейку для вычисления стоимости
     const costCell = newRow.insertCell();
+    quantityInput.addEventListener('change', () => {
+        // Получаем количество, введенное пользователем
+        const quantity = parseFloat(quantityInput.value) || 0;
 
-    // Добавляем ячейку для ввода данных
-    ["", ""].forEach(value => {
-        const cell = newRow.insertCell();
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = value;
-        cell.appendChild(input);
+        // Получаем цену выбранного продукта
+        const selectedProductId = productSelect.value;
+        const selectedProduct = productData.find(product => product.id === selectedProductId);
+        const price = selectedProduct ? selectedProduct.price : 0;
+
+        // Вычисляем общую стоимость заказа (количество * цена)
+        const totalCost = quantity * price;
+
+        // Устанавливаем значение в соответствующую ячейку
+        costCell.textContent = totalCost.toFixed(2);
     });
+    const customerCell = newRow.insertCell();
+
+// Создаем селектор имени клиента
+    const customerSelect = document.createElement("select");
+    customerSelect.classList.add("customer-select");
+
+// Делаем GET запрос на сервер для получения данных о клиентах
+    fetch('https://retail-n3ew.onrender.com/customer')
+        .then(response => response.json())
+        .then(customerData => {
+            // Заполняем селектор данными о клиентах
+            customerData.forEach(customer => {
+                const option = document.createElement("option");
+                option.value = customer.id;
+                option.textContent = customer.firstName + ' ' + customer.lastName;
+                customerSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching customer data:', error);
+        });
+    // Добавляем обработчик изменения значения в селекторе имени клиента
+    customerSelect.addEventListener('change', () => {
+        // Получаем идентификатор выбранного клиента
+        const selectedCustomerId = customerSelect.value;
+
+        // Если клиент выбран
+        if (selectedCustomerId) {
+            // Делаем GET запрос на сервер для получения данных о клиенте по его идентификатору
+            fetch(`https://retail-n3ew.onrender.com/customer/${selectedCustomerId}`)
+                .then(response => response.json())
+                .then(customer => {
+                    // Если у клиента есть адрес, отображаем его в ячейке
+                    if (customer.shippingAdress) {
+                        addressCell.textContent = customer.shippingAdress;
+                    } else {
+                        addressCell.textContent = "Адрес не указан";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching customer address:', error);
+                });
+        } else {
+            // Если клиент не выбран, очищаем ячейку с адресом
+            addressCell.textContent = "";
+        }
+    });
+
+// Создаем ячейку для отображения адреса клиента
+    const addressCell = newRow.insertCell();
+
+
+// Добавляем селектор имени клиента в ячейку
+    customerCell.appendChild(customerSelect);
+
 
     const addButton = document.querySelector(".addBtn");
     addButton.remove();
@@ -470,6 +531,9 @@ function addNewRow() {
 
     document.body.appendChild(saveButton);
 }
+
+
+
 
 
 
