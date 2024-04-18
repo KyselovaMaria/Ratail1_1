@@ -51,6 +51,15 @@ button {
 .login-button {
     background-color: #0d47a1;
 }
+.signup-button {
+    background-color: #0d47a1;
+}
+.user-button {
+    background-color: #0d47a1;
+}
+.logout-button {
+    background-color: #0d47a1;
+}
 
 button:hover {
     background-color: #2962ff;

@@ -107,6 +107,13 @@
 }
 ```
 
+Приклад HTTP-header:
+```json
+{
+  Authorization: Bearer {token}
+}
+```
+
 ### /product
 
 #### GET /
@@ -130,6 +137,13 @@
 }
 ```
 
+Приклад HTTP-header:
+```json
+{
+  Authorization: Bearer {token}
+}
+```
+
 ### /stock
 
 #### POST /addToStock
@@ -141,6 +155,13 @@
 {
   id: string;
   amount: number;
+}
+```
+
+Приклад HTTP-header:
+```json
+{
+  Authorization: Bearer {token}
 }
 ```
 
@@ -157,6 +178,13 @@
 }
 ```
 
+Приклад HTTP-header:
+```json
+{
+  Authorization: Bearer {token}
+}
+```
+
 #### POST /
 
 Створити новий продукт з наданими даними в тілі запиту.
@@ -169,3 +197,76 @@
   amount: number;
 }
 ```
+
+Приклад HTTP-header:
+```json
+{
+  Authorization: Bearer {token}
+}
+```
+
+
+### /orderListing
+
+#### POST /
+
+Додати кількість товару до стоку.
+
+Приклад JSON-об'єкту для створення нового продукта:
+```json
+{
+  orderId: string;
+  productId: string;
+  amount: number;
+}
+```
+
+
+### /auth
+
+#### POST /login
+
+Отримати новий токен через логін.
+
+Приклад JSON-об'єкту:
+```json
+{
+  username: string
+  password: string
+}
+```
+
+#### POST /signup
+
+Створити нового юзера з роллю. roleId: 1 - admin, 2 - manager, 3 customer
+
+Приклад JSON-об'єкту для створення нового юзера:
+```json
+{
+  username: string,
+  email: string,
+  password: string,
+  roleId: number,
+}
+```
+
+### /user
+
+#### GET /
+
+Отримати дані про користувача з токена, для перевірки авторизації в основному.
+
+### ROLES
+
+#### Admin
+
+Може все, тільки адмін може створювати нові продукти, склади, редагувати та видаляти їх
+
+#### MANAGER
+
+Може те, що може кастомер. Також може редагувати, додавати і т.п. stocks
+
+#### CUSTOMER
+
+Може все окрім того, що унікально для менеджерів і адмінів
+

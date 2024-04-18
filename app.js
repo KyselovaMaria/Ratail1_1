@@ -20,7 +20,365 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     });
+    const signupButton = document.querySelector(".signup-button");
+    signupButton.addEventListener("click", handleSignup);
+
+    const loginButton = document.querySelector(".login-button");
+    loginButton.addEventListener("click", handleLogin);
+
+    const token = getCookie("token");
+    if (token) {
+        getUserInfo(token);
+    } else {
+        showLoginSignupButtons();
+    }
 });
+
+function showLoginSignupButtons() {
+    const loginButton = document.createElement("button");
+    loginButton.textContent = "Login";
+    loginButton.classList.add("login-button");
+    loginButton.addEventListener("click", handleLogin);
+
+    const signupButton = document.createElement("button");
+    signupButton.textContent = "Signup";
+    signupButton.classList.add("signup-button");
+    signupButton.addEventListener("click", handleSignup);
+
+    const header = document.querySelector("nav");
+
+    const userButton = header.querySelector(".user-button");
+    const logoutButton = header.querySelector(".logout-button");
+    const logButton = header.querySelector(".login-button");
+    const singtButton = header.querySelector(".signup-button");
+    if (userButton) {
+        userButton.parentNode.removeChild(userButton);
+    }
+    if (logoutButton) {
+        logoutButton.parentNode.removeChild(logoutButton);
+    }
+    if (logButton) {
+        logButton.parentNode.removeChild(logButton);
+    }
+    if (singtButton) {
+        singtButton.parentNode.removeChild(singtButton);
+    }
+
+    // Append login and signup buttons after existing navigation links
+    header.appendChild(loginButton);
+    header.appendChild(signupButton);
+}
+
+
+function showUserButtons(user) {
+    const username = user.username;
+
+    const userButton = document.createElement("button");
+    userButton.textContent = username;
+    userButton.classList.add("user-button");
+    userButton.addEventListener("click", handleUserClick);
+
+    const logoutButton = document.createElement("button");
+    logoutButton.textContent = "Logout";
+    logoutButton.classList.add("logout-button");
+    logoutButton.addEventListener("click", handleLogout);
+
+    const header = document.querySelector("nav");
+
+    // Remove login and signup buttons
+    const loginButton = header.querySelector(".login-button");
+    const signupButton = header.querySelector(".signup-button");
+    loginButton.parentNode.removeChild(loginButton);
+    signupButton.parentNode.removeChild(signupButton);
+
+    // Append user and logout buttons after existing navigation links
+    header.querySelector("div").appendChild(userButton);
+    header.querySelector("div").appendChild(logoutButton);
+}
+
+
+
+function handleUserClick() {
+    // Добавьте здесь обработчик для действий пользователя, если необходимо
+}
+
+function handleLogout() {
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    showLoginSignupButtons();
+}
+
+function getUserInfo(token) {
+    fetch("https://retail-n3ew.onrender.com/user", {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error("User info request failed");
+            }
+        })
+        .then(user => {
+            showUserButtons(user);
+        })
+        .catch(error => {
+            console.error("User info request error: ", error);
+            showLoginSignupButtons();
+        });
+}
+
+function getCookie(name) {
+    const cookies = document.cookie.split(";").map(cookie => cookie.trim());
+    for (const cookie of cookies) {
+        const [cookieName, cookieValue] = cookie.split("=");
+        if (cookieName === name) {
+            return cookieValue;
+        }
+    }
+    return null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function handleLogin() {
+    // Создаем модальное окно для ввода учетных данных
+    const modalContainer = document.createElement("div");
+    modalContainer.classList.add("modal-container");
+
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+
+    // Создаем форму для ввода учетных данных
+    const form = document.createElement("form");
+    form.classList.add("login-form");
+
+    const usernameInput = createInput("text", "username", "Username");
+    const passwordInput = createInput("password", "password", "Password");
+
+    // Добавляем поля формы в форму
+    form.appendChild(usernameInput);
+    form.appendChild(passwordInput);
+
+    // Добавляем кнопку отправки формы
+    const submitButton = document.createElement("button");
+    submitButton.textContent = "Submit";
+    submitButton.type = "submit";
+
+    form.appendChild(submitButton);
+    form.addEventListener("submit", handleLoginSubmit);
+
+    modal.appendChild(form);
+    modalContainer.appendChild(modal);
+    document.body.appendChild(modalContainer);
+
+    // Закрываем модальное окно при нажатии на фон
+    modalContainer.addEventListener("click", function(event) {
+        if (event.target === modalContainer) {
+            closeModal();
+        }
+    });
+}
+
+function createInput(type, name, placeholder) {
+    const input = document.createElement("input");
+    input.type = type;
+    input.name = name;
+    input.placeholder = placeholder;
+    return input;
+}
+
+function handleLoginSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const requestBody = {
+        username: formData.get("username"),
+        password: formData.get("password")
+    };
+
+    fetch("https://retail-n3ew.onrender.com/auth/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            // "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody)
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error("Login failed");
+            }
+        })
+        .then(data => {
+            const { user, token } = data;
+            console.log(token);
+            getUserInfo(token);
+            // Сохраняем токен в куки
+            document.cookie = `token=${token}; path=/`;
+            alert("Login successful!");
+            form.reset();
+            closeModal(); // Закрываем модальное окно после успешного входа
+        })
+        .catch(error => {
+            console.error("Login error: ", error);
+            alert("Login failed. Please try again.");
+        });
+}
+
+function closeModal() {
+    const modalContainer = document.querySelector(".modal-container");
+    if (modalContainer) {
+        modalContainer.remove();
+    }
+}
+
+
+
+function handleSignup() {
+    // Создаем модальное окно
+    const modalContainer = document.createElement("div");
+    modalContainer.classList.add("modal-container");
+
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+
+    // Создаем форму для ввода данных
+    const form = document.createElement("form");
+    form.classList.add("signup-form");
+
+    const usernameInput = createInput("text", "username", "Username");
+    const emailInput = createInput("email", "email", "Email");
+    const passwordInput = createInput("password", "password", "Password");
+
+    // Добавляем поле выбора роли
+    const roleSelect = document.createElement("select");
+    roleSelect.name = "roleId";
+
+    // Заполняем опции для выбора роли
+    const roleOptions = [
+        { value: 1, text: "Role 1" },
+        { value: 2, text: "Role 2" },
+        { value: 3, text: "Role 3" }
+    ];
+
+    roleOptions.forEach(option => {
+        const roleOption = document.createElement("option");
+        roleOption.value = option.value;
+        roleOption.textContent = option.text;
+        roleSelect.appendChild(roleOption);
+    });
+
+    // Добавляем поля формы в форму
+    form.appendChild(usernameInput);
+    form.appendChild(emailInput);
+    form.appendChild(passwordInput);
+    form.appendChild(roleSelect);
+
+    // Добавляем кнопки
+    const submitButton = document.createElement("button");
+    submitButton.textContent = "Submit";
+    submitButton.type = "submit";
+
+    const cancelButton = document.createElement("button");
+    cancelButton.textContent = "Cancel";
+    cancelButton.type = "button";
+    cancelButton.addEventListener("click", closeModal); // Закрываем модальное окно при нажатии на кнопку "Cancel"
+
+    form.appendChild(submitButton);
+    form.appendChild(cancelButton);
+    form.addEventListener("submit", handleSubmit);
+
+    modal.appendChild(form);
+    modalContainer.appendChild(modal);
+    document.body.appendChild(modalContainer);
+
+    // Закрываем модальное окно при нажатии на фон
+    modalContainer.addEventListener("click", function(event) {
+        if (event.target === modalContainer) {
+            closeModal();
+        }
+    });
+}
+
+function createInput(type, name, placeholder) {
+    const input = document.createElement("input");
+    input.type = type;
+    input.name = name;
+    input.placeholder = placeholder;
+    return input;
+}
+function handleSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const requestBody = {
+        username: formData.get("username"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+        roleId: parseInt(formData.get("roleId"))
+    };
+    // const token = getCookie("token");
+    fetch("https://retail-n3ew.onrender.com/auth/signup", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            // "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody)
+    })
+        .then(response => {
+            if (response.ok) {
+                alert("User created successfully!");
+                form.reset();
+                closeModal(); // Закрываем модальное окно после успешной отправки
+            } else {
+                alert("Error creating user. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error creating user: ", error);
+            alert("Error creating user. Please try again later.");
+        });
+}
+
+function closeModal() {
+    const modalContainer = document.querySelector(".modal-container");
+    if (modalContainer) {
+        modalContainer.remove();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function removePreviousTable() {
@@ -52,10 +410,10 @@ function fetchWarehouseDataFromAPI() {
         .catch(error => console.error("Error fetching warehouse data: ", error));
 }
 
-function fetchProductsDataFromAPI(warehouseId) {
+function fetchProductsDataFromAPI1(warehouseId) {
     fetch(`https://retail-n3ew.onrender.com/warehouse/${warehouseId}`)
         .then(response => response.json())
-        .then(data => displayProductsTable(data))
+        .then(data => displayProductsTable1(data))
         .catch(error => console.error("Error fetching products data: ", error));
 }
 function fetchCustomersDataFromAPI() {
@@ -143,7 +501,7 @@ function displayWarehouseTable(warehouses) {
 
         // Добавляем обработчик событий для нажатия на название склада
         nameCell.addEventListener("click", function() {
-            fetchProductsDataFromAPI(warehouse.id);
+            fetchProductsDataFromAPI1(warehouse.id);
         });
     });
 
@@ -152,7 +510,7 @@ function displayWarehouseTable(warehouses) {
 }
 
 
-function displayProductsTable(warehouse) {
+function displayProductsTable1(warehouse) {
     removePreviousTable();
 
     // Создаем элемент для отображения названия склада
@@ -238,10 +596,12 @@ function addMoreProduct(stockId, warehouse) {
         if (!isNaN(amount) && amount > 0) {
             // Если введенное значение является числом больше нуля, отправляем POST-запрос на сервер
             const data = { id: stockId, amount };
+            const token = getCookie("token");
             fetch("https://retail-n3ew.onrender.com/stock/addToStock", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify(data)
             })
@@ -251,7 +611,7 @@ function addMoreProduct(stockId, warehouse) {
                     }
                     // Успешно добавлено
                     setTimeout(() => {
-                        fetchProductsDataFromAPI(warehouse);
+                        fetchProductsDataFromAPI1(warehouse);
                     }, 10);
                     closeModal(); // Закрываем модальное окно
                 })
@@ -337,10 +697,12 @@ function moveProduct(stockId, warehouse, productId) {
                         // Если введенное значение является числом больше нуля, отправляем POST-запрос на сервер
                         const stockToId = stockId;
                         const data = { stockToId, stockFromId, amount };
+                        const token = getCookie("token");
                         fetch("https://retail-n3ew.onrender.com/stock/transferStock", {
                             method: "POST",
                             headers: {
-                                "Content-Type": "application/json"
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`
                             },
                             body: JSON.stringify(data)
                         })
@@ -349,7 +711,7 @@ function moveProduct(stockId, warehouse, productId) {
                                     throw new Error("Failed to transfer product stock");
                                 }
                                 setTimeout(() => {
-                                    fetchProductsDataFromAPI(warehouse);
+                                    fetchProductsDataFromAPI1(warehouse);
                                 }, 10);
                                 // Успешно перемещено
                                 closeModal(); // Закрываем модальное окно
@@ -675,10 +1037,12 @@ function addNewCustomer() {
         // Проверяем, что все обязательные поля заполнены
         if (lastName && firstName && phone && email && shippingAddress) {
             const data = { lastName, firstName, patronymic, phone, email, shippingAdress: shippingAddress };
+            const token = getCookie("token");
             fetch("https://retail-n3ew.onrender.com/customer", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify(data)
             })
@@ -815,10 +1179,12 @@ function addNewProduct() {
         // Проверяем, что все поля заполнены
         if (name && !isNaN(price) && !isNaN(minimumStock)) {
             const data = { name, price, minimumStock };
+            const token = getCookie("token");
             fetch("https://retail-n3ew.onrender.com/product", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify(data)
             })
