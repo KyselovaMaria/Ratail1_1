@@ -828,6 +828,7 @@ function addNewRow() {
     const quantityCell = newRow.insertCell();
     const quantityInput = document.createElement("input");
     quantityInput.type = "text";
+    quantityInput.classList.add("quantity-input");
     quantityCell.appendChild(quantityInput);
 
     // Создаем ячейку для вычисления стоимости
@@ -914,25 +915,94 @@ function addNewRow() {
 }
 
 
-
-
-
-
-
-
-
 function saveData() {
-    const newRowInputs = document.querySelectorAll(".orders-table-container input");
-    const newRowData = {};
-    newRowInputs.forEach((input, index) => {
-        const headerText = document.querySelector(".orders-table th:nth-child(" + (index + 1) + ")").textContent;
-        newRowData[headerText] = input.value;
-    });
-    console.log("New Row Data:", newRowData);
+    const warehouseSelect = document.querySelector('.warehouse-select');
+    const productSelect = document.querySelector('.product-select');
+    const quantityInput = document.querySelector('.quantity-input');
+    const customerSelect = document.querySelector('.customer-select');
+
+    const warehouseName = warehouseSelect.options[warehouseSelect.selectedIndex].textContent;
+    const productName = productSelect.options[productSelect.selectedIndex].textContent;
+    const quantity = quantityInput.value;
+    const shipName = customerSelect.options[customerSelect.selectedIndex].textContent;
+
+    console.log("Warehouse:", warehouseName);
+    console.log("Products:", productName);
+    console.log("Quantity:", quantity);
+    console.log("Ship Name:", shipName);
 
     removePreviousTable();
     fetchOrdersDataFromAPI();
 }
+async function saveOrder(customerId, warehouseId) {
+    try {
+        const response = await fetch('https://retail-n3ew.onrender.com/order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                customerId: customerId,
+                warehouseId: warehouseId
+            })
+        });
+        const data = await response.json();
+        return data.id;
+    } catch (error) {
+        console.error('Error saving order:', error);
+        throw error;
+    }
+}
+async function saveOrderListing(orderId, productId, amount) {
+    try {
+        const response = await fetch('https://retail-n3ew.onrender.com/orderListing', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                orderId: orderId,
+                productId: productId,
+                amount: amount
+            })
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error saving order listing:', error);
+        throw error;
+    }
+}
+
+async function saveData() {
+    try {
+        const warehouseSelect = document.querySelector('.warehouse-select');
+        const productSelect = document.querySelector('.product-select');
+        const quantityInput = document.querySelector('.quantity-input');
+        const customerSelect = document.querySelector('.customer-select');
+
+        const warehouseId = warehouseSelect.value;
+        const customerId = customerSelect.value;
+
+        const orderId = await saveOrder(customerId, warehouseId);
+
+        const productId = productSelect.value;
+        const amount = parseFloat(quantityInput.value) || 0;
+
+        await saveOrderListing(orderId, productId, amount);
+
+        console.log("Order ID:", orderId);
+    } catch (error) {
+        console.error('Error saving data:', error);
+    }
+    removePreviousTable();
+    fetchOrdersDataFromAPI();
+}
+
+
+
+
+
 
 function displayCustomersTable(customers) {
     removePreviousTable(); // Удаление предыдущей таблицы, если она есть
